@@ -1,14 +1,14 @@
 # topface.marathon_app
 
-Deploy apps on [marathon](https://mesosphere.github.io/marathon/) from ansible.
+Deploy apps on [Marathon](https://mesosphere.github.io/marathon/) from ansible.
 
 ## Usage
 
-This role deploys app on marathon via `PUT /v2/apps/{appId}` API.
+This role deploys app on Marathon via `PUT /v2/apps/{appId}` API.
 
 ### Role configuration
 
-* `marathon_url` url of marathon, example: `http://marathon.dev:8080`
+* `marathon_url` url of Marathon, example: `http://marathon.dev:8080`
 * `marathon_wait_for_deployment` whether to block until deployment is finished,
 set to `true` by default
 * `marathon_app` marathon application definition, see
@@ -16,11 +16,12 @@ set to `true` by default
 
 ### Example
 
-The next playbook deploys [Chronos](http://airbnb.github.io/chronos/)
+The next playbook deploys [Chronos](https://airbnb.github.io/chronos/)
 on marathon with single instance and waits for deployment to finish.
 
 ```yaml
 - hosts: marathon-api-server
+  gather_facts: no
   roles:
     - role: topface.marathon_app
       tags:
@@ -48,6 +49,9 @@ on marathon with single instance and waits for deployment to finish.
             intervalSeconds: 5
             timeoutSeconds: 5
 ```
+
+See [topface.chronos_on_marathon](https://github.com/Topface/ansible-chronos_on_marathon)
+to learn how to run tasks on Chronos launched this way.
 
 ## License
 
