@@ -50,7 +50,7 @@ on marathon with single instance and waits for deployment to finish.
             timeoutSeconds: 5
 ```
 
-See [topface.chronos_on_marathon](https://github.com/Topface/ansible-chronos_on_marathon)
+See [topface.marathon_chronos_task](https://github.com/Topface/ansible-marathon_chronos_task)
 to learn how to run tasks on Chronos launched this way.
 
 ## License
