@@ -1,0 +1,19 @@
+---
+- name: launch marathon apps
+  uri: >
+    url="{{ marathon_url }}/v2/apps{{ marathon_app.id }}"
+    method=PUT
+    HEADER_Content-Type="application/json"
+    body='{{ marathon_app | to_json }}'
+    status_code=200,201
+  register: marathon_deployment
+- name: waiting for deployment to finish
+  uri: >
+    url="{{ marathon_url }}/v2/deployments"
+    method=GET
+    status_code=200
+  register: marathon_deployments
+  until: "{{ marathon_deployment.json.deploymentId not in marathon_deployments.json|map(attribute='id') }}"
+  delay: 1
+  retries: 3600
+  when: marathon_wait_for_deployment
