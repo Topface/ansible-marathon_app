@@ -55,4 +55,4 @@ to learn how to run tasks on Chronos launched this way.
 
 ## License
 
-MIT
+[MIT](LICENSE)
