@@ -1,5 +1,5 @@
 ---
-- name: launch marathon apps
+- name: "launch app: {{ marathon_app.id }}"
   uri: >
     url="{{ marathon_url }}/v2/apps{{ marathon_app.id }}"
     method=PUT
@@ -7,7 +7,8 @@
     body='{{ marathon_app | to_json }}'
     status_code=200,201
   register: marathon_deployment
-- name: waiting for deployment to finish
+
+- name: "wait for app: {{ marathon_app.id }}"
   uri: >
     url="{{ marathon_url }}/v2/deployments"
     method=GET
