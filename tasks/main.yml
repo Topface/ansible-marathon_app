@@ -7,7 +7,7 @@
     status_code=200
     return_content=yes
   register: marathon_ping
-  until: "{{ marathon_ping.content | search('pong') }}"
+  until: "{{ 'error' not in marathon_ping.msg and 'pong' in marathon_ping.content }}"
   delay: 1
   retries: 3600
 
