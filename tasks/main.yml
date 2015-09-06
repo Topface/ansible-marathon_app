@@ -1,5 +1,8 @@
 ---
 
+- name: Ensure that all services have restarted
+  meta: flush_handlers
+
 - name: "wait for marathon"
   uri: >
     url="{{ marathon_url }}/ping"
@@ -7,7 +10,7 @@
     status_code=200
     return_content=yes
   register: marathon_ping
-  until: "{{ 'error' not in marathon_ping.msg and 'pong' in marathon_ping.content }}"
+  until: "{{ ('msg' not in marathon_ping or 'error' not in marathon_ping.msg) and 'content' in marathon_ping and 'pong' in marathon_ping.content }}"
   delay: 1
   retries: 3600
 
@@ -19,6 +22,21 @@
     body='{{ marathon_app | to_json }}'
     status_code=200,201
   register: marathon_deployment
+
+- name: "wait for app: {{ marathon_app.id }}"
+  uri: >
+    url="{{ marathon_url }}/v2/deployments"
+    method=GET
+    status_code=200
+  register: marathon_deployments
+  until: "{{ marathon_deployment.json.deploymentId not in marathon_deployments.json|map(attribute='id') }}"
+  delay: 1
+  when: marathon_wait_for_deployment
+  ignore_errors: True
+
+- debug: var=marathon_deployment
+
+- debug: var=marathon_deployment.json
 
 - name: "wait for app: {{ marathon_app.id }}"
   uri: >
