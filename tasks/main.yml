@@ -31,20 +31,5 @@
   register: marathon_deployments
   until: "{{ marathon_deployment.json.deploymentId not in marathon_deployments.json|map(attribute='id') }}"
   delay: 1
-  when: marathon_wait_for_deployment
-  ignore_errors: True
-
-- debug: var=marathon_deployment
-
-- debug: var=marathon_deployment.json
-
-- name: "wait for app: {{ marathon_app.id }}"
-  uri: >
-    url="{{ marathon_url }}/v2/deployments"
-    method=GET
-    status_code=200
-  register: marathon_deployments
-  until: "{{ marathon_deployment.json.deploymentId not in marathon_deployments.json|map(attribute='id') }}"
-  delay: 1
   retries: 3600
   when: marathon_wait_for_deployment
