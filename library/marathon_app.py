@@ -308,7 +308,7 @@ def create(restbase, user, passwd, params):
     print ret
 
     if params['waitTimeout']:
-      waitForDeployment(restbase, user, passwd, ret['deployments'][0]['id'])
+      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
 
     return ret
 
@@ -325,11 +325,11 @@ def edit(restbase, user, passwd, params):
     ret = put(url, user, passwd, data) 
 
     if params['waitTimeout']:
-      waitForDeployment(restbase, user, passwd, ret['deployments'][0]['id'])
+      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
 
     return ret
 
-def waitForDeployment(restbase, user, passwd, deploymentId):
+def waitForDeployment(restbase, user, passwd, params, deploymentId):
   timeout = time.time() + params['waitTimeout']
   while True:
     url = restbase + '/apps/deployments'
