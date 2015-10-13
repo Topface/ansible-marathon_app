@@ -187,6 +187,11 @@ options:
     description:
      - If the app is affected by a running deployment, then the update operation will fail. The current deployment can be overridden by setting the `force` query parameter. Default: false.
 
+  waitTimeout:
+    required: false
+    description:
+     - If set and the operation is create or update, wait for the application to become available until timeout seconds.
+
 author: "Ludovic Claude (@ludovicc)"
 """
 
@@ -251,6 +256,7 @@ TODO
 
 import json
 import base64
+import time
 
 def request(url, user=None, passwd=None, data=None, method=None):
     if data:
@@ -297,7 +303,12 @@ def create(restbase, user, passwd, params):
 
     url = restbase + '/apps'
 
-    ret = post(url, user, passwd, data) 
+    ret = post(url, user, passwd, data)
+
+    print ret
+
+    if params['waitTimeout']:
+      waitForDeployment(restbase, user, password, ret.deployments[0].id)
 
     return ret
 
@@ -313,7 +324,38 @@ def edit(restbase, user, passwd, params):
 
     ret = put(url, user, passwd, data) 
 
+    if params['waitTimeout']:
+      waitForDeployment(restbase, user, password, ret.deployments[0].id)
+
     return ret
+
+def waitForDeployment(restbase, user, passwd, deploymentId):
+  timeout = time.time() + params['waitTimeout']
+  while True:
+    url = restbase + '/apps/deployments'
+    if not user:
+      auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
+      response, info = fetch_url(module, url, data=data, method=method, 
+                               headers={'Content-Type':'application/json',
+                                        'Authorization':"Basic %s" % auth})
+    else:
+      response, info = fetch_url(module, url, data=data, method=method, 
+                               headers={'Content-Type':'application/json'})
+
+    if info['status'] in (200, 204):
+      body = response.read()
+
+      if body:
+        deployments = json.loads(body)
+        deploymentIds = map(lambda x: x['id'], deployments)
+        if deploymentId not in deploymentIds:
+          return
+
+    time.sleep(1)
+
+    if time.time() > timeout:
+      module.fail_json(msg='Timeout waiting for deployment.')
+
 
 def restart(restbase, user, passwd, params):
     data = {
@@ -367,11 +409,11 @@ def main():
             password=dict(required=False,default=None),
             id=dict(type='str'),
             cmd=dict(aliases=['command'], type='str'),
-            args=dict(aliases=['arguments']),
-            cpus=dict(),
+            args=dict(aliases=['arguments'], type='list'),
+            cpus=dict(type='float'),
             mem=dict(aliases=['memory']),
-            ports=dict(),
-            requirePorts=dict(),
+            ports=dict(type='list'),
+            requirePorts=dict(default=False, type='bool'),
             instances=dict(),
             executor=dict(),
             container=dict(),
@@ -382,20 +424,21 @@ def main():
             docker_parameters=dict(default=[]),
             docker_portMappings=dict(default=[]),
             container_volumes=dict(default=[]),
-            env=dict(default={}),
-            constraints=dict(),
+            env=dict(default={},type='dict'),
+            constraints=dict(type='list'),
             acceptedResourceRoles=dict(),
-            labels=dict(),
-            uris=dict(),
-            dependencies=dict(),
-            healthChecks=dict(),
-            backoffSeconds=dict(),
-            backoffFactor=dict(),
-            maxLaunchDelaySeconds=dict(),
+            labels=dict(type='list'),
+            uris=dict(type='list'),
+            dependencies=dict(type='list'),
+            healthChecks=dict(type='list'),
+            backoffSeconds=dict(type='float'),
+            backoffFactor=dict(type='float'),
+            maxLaunchDelaySeconds=dict(type='float'),
             upgradeStrategy=dict(default={}),
             upgradeStrategy_minimumHealthCapacity=dict(),
             upgradeStrategy_maximumOverCapacity=dict(),
-            force=dict(default=False, type='bool')
+            force=dict(default=False, type='bool'),
+            waitTimeout=dict(type='int')
         ),
         supports_check_mode=False
     )
