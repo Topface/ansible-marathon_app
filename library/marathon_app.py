@@ -87,6 +87,41 @@ options:
     description:
      - Additional data passed to the containerizer on application launch. This is a free-form data structure that can contain arbitrary data.
 
+  docker_image:
+    required: false
+    description:
+     - Name of the Docker image. Ignored if container is defined.
+
+  docker_forcePullImage:
+    required: false
+    description:
+     - Force Docker to pull the image before launching each task. Ignored if container is defined.
+
+  docker_privileged:
+    required: false
+    description:
+     - Allows users to run containers in privileged mode. Ignored if container is defined.
+
+  docker_network:
+    required: false
+    description:
+     - Type of networking for the Docker container. Ignored if container is defined.
+
+  docker_portMappings:
+    required: false
+    description:
+     - Port mappings for the Docker container. Ignored if container is defined.
+
+  docker_parameters:
+    required: false
+    description:
+     - Arbitrary parameters for the Docker container. Ignored if container is defined.
+
+  container_volumes:
+    required: false
+    description:
+     - Array of volumes for the container. Ignored if container is defined.
+
   env:
     required: false
     description:
@@ -147,7 +182,7 @@ options:
     description:
      - a number between 0 and 1 which is multiplied with the instance count. This is the maximum number of additional instances launched at any point of time during the upgrade process.
 
-  restart:
+  force:
     required: false
     description:
      - If the app is affected by a running deployment, then the update operation will fail. The current deployment can be overridden by setting the `force` query parameter. Default: false.
@@ -253,17 +288,12 @@ def delete(url, user, passwd):
     return request(url, user, passwd, data=None, method='DELETE')
 
 def create(restbase, user, passwd, params):
-    createfields = {
-        'id': params['id'],
-        'summary': params['summary'],
-        'description': params['description'],
-        'issuetype': { 'name': params['issuetype'] }}
+    data = {'id': params['id']}
 
     # Merge in any additional or overridden fields
-    if params['fields']:
-        createfields.update(params['fields'])
-
-    data = {'fields': createfields}
+    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    	if params[arg]:
+    		data.update({arg: params[arg]})
 
     url = restbase + '/apps'
 
@@ -271,13 +301,15 @@ def create(restbase, user, passwd, params):
 
     return ret
 
-
 def edit(restbase, user, passwd, params):
-    data = {
-        'id': params['id']
-        }
+    data = {'id': params['id']}
 
-    url = restbase + '/apps/' + params['id']    
+    # Merge in any additional or overridden fields
+    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    	if params[arg]:
+    		data.update({arg: params[arg]})
+
+    url = restbase + '/apps?force=' + params['force']
 
     ret = put(url, user, passwd, data) 
 
@@ -296,6 +328,11 @@ def restart(restbase, user, passwd, params):
 
 def fetch(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id']
+    ret = get(url, user, passwd) 
+    return ret
+
+def versions(restbase, user, passwd, params):
+    url = restbase + '/apps/' + params['id'] + '/versions'
     ret = get(url, user, passwd) 
     return ret
 
@@ -338,6 +375,13 @@ def main():
             instances=dict(),
             executor=dict(),
             container=dict(),
+            docker_image=dict(),
+            docker_forcePullImage=dict(default=False, type='bool'),
+            docker_privileged=dict(default=False, type='bool'),
+            docker_network=dict(default='none', type='str'),
+            docker_parameters=dict(default=[]),
+            docker_portMappings=dict(default=[]),
+            container_volumes=dict(default=[]),
             env=dict(default={}),
             constraints=dict(),
             acceptedResourceRoles=dict(),
@@ -348,9 +392,10 @@ def main():
             backoffSeconds=dict(),
             backoffFactor=dict(),
             maxLaunchDelaySeconds=dict(),
+            upgradeStrategy=dict(default={}),
             upgradeStrategy_minimumHealthCapacity=dict(),
             upgradeStrategy_maximumOverCapacity=dict(),
-            restart=dict(default=False, type='bool'))
+            force=dict(default=False, type='bool')
         ),
         supports_check_mode=False
     )
@@ -369,6 +414,15 @@ def main():
     uri = module.params['uri']
     user = module.params['username']
     passwd = module.params['password']
+
+    if module.params['docker_image'] and not module.params['container']:
+    	module.params['container'] = { 'type': 'DOCKER', 'docker': { 'image': module.params['docker_image'], 'forcePullImage': module.params['docker_forcePullImage'], 'privileged': module.params['docker_privileged'], 'network': module.params['docker_network'], 'parameters': module.params['docker_parameters'], 'portMappings': module.params['docker_portMappings']}, 'volumes': module.params['container_volumes']}
+
+    if module.params['upgradeStrategy_minimumHealthCapacity']:
+    	module.params['upgradeStrategy'].update({'minimumHealthCapacity': module.params['upgradeStrategy_minimumHealthCapacity']})
+
+    if module.params['upgradeStrategy_maximumOverCapacity']:
+    	module.params['upgradeStrategy'].update({'maximumOverCapacity': module.params['upgradeStrategy_maximumOverCapacity']})
 
     if not uri.endswith('/'):
         uri = uri+'/'
