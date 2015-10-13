@@ -2,7 +2,7 @@
 
 - name: "wait for app: {{ id }}"
   uri: >
-    url="{{ url }}/v2/deployments"
+    url="{{ uri }}/v2/deployments"
     method=GET
     status_code=200
   register: marathon_deployments

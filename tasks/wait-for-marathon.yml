@@ -5,7 +5,7 @@
 
 - name: "wait for marathon"
   uri: >
-    url="{{ url }}/ping"
+    url="{{ uri }}/ping"
     method=GET
     status_code=200
     return_content=yes
