@@ -305,8 +305,6 @@ def create(restbase, user, passwd, params):
 
     ret = post(url, user, passwd, data)
 
-    print ret
-
     if params['waitTimeout']:
       waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
 
@@ -331,6 +329,7 @@ def edit(restbase, user, passwd, params):
 
 def waitForDeployment(restbase, user, passwd, params, deploymentId):
   timeout = time.time() + params['waitTimeout']
+
   while True:
     url = restbase + '/deployments'
     if not user:
@@ -351,6 +350,7 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
         if deploymentId not in deploymentIds:
           return
 
+    response.close()
     time.sleep(1)
 
     if time.time() > timeout:
