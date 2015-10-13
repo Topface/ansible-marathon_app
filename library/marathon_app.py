@@ -332,7 +332,7 @@ def edit(restbase, user, passwd, params):
 def waitForDeployment(restbase, user, passwd, params, deploymentId):
   timeout = time.time() + params['waitTimeout']
   while True:
-    url = restbase + '/apps/deployments'
+    url = restbase + '/deployments'
     if not user:
       auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
       response, info = fetch_url(module, url, data=None, method=None, 
