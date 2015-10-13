@@ -335,11 +335,11 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
     url = restbase + '/apps/deployments'
     if not user:
       auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
-      response, info = fetch_url(module, url, data=None, method=method, 
+      response, info = fetch_url(module, url, data=None, method=None, 
                                headers={'Content-Type':'application/json',
                                         'Authorization':"Basic %s" % auth})
     else:
-      response, info = fetch_url(module, url, data=None, method=method, 
+      response, info = fetch_url(module, url, data=None, method=None, 
                                headers={'Content-Type':'application/json'})
 
     if info['status'] in (200, 204):
