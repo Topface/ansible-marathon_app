@@ -4,6 +4,8 @@
 # (c) 2015, Ludovic Claude <ludovic.claude@laposte.net>
 #
 
+# TODO: operation fetch, version
+
 DOCUMENTATION = """
 module: marathon_app
 version_added: "1.9"
@@ -17,10 +19,10 @@ options:
     description:
       - Base URI for the Marathon instance
 
-  operation:
+  state:
     required: true
-    aliases: [ command ]
-    choices: [ create, edit, fetch, versions, restart, destroy, kill ]
+    choices: [ present, absent, restart, kill ]
+    default: "present"
     description:
       - The operation to perform.
 
@@ -383,18 +385,22 @@ def destroy(restbase, user, passwd, params):
     ret = delete(url, user, passwd) 
     return ret
 
+def absent(restbase, user, passwd, params):
+    return destroy(restbase, user, passwd, params)
+
+def present(restbase, user, passwd, params):
+    # TODO: check if already present, if yes edit container
+    return create(restbase, user, passwd, params)
+
 def kill(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id'] + '/tasks'  
     ret = delete(url, user, passwd) 
     return ret
 
 # Some parameters are required depending on the operation:
-OP_REQUIRED = dict(create=['id'],
-                   edit=['id'],
-                   fetch=['id'],
-                   versions=['id'],
+OP_REQUIRED = dict(absent=['id'],
+                   present=['id'],
                    restart=['id'],
-                   destroy=['id'],
                    kill=['id'])
 
 def main():
@@ -403,8 +409,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             uri=dict(required=True),
-            operation=dict(choices=['create', 'edit', 'fetch', 'versions', 'restart', 'destroy', 'kill'],
-                           aliases=['command'], required=True),
+            state=dict(choices=['absent', 'present', 'restart', 'kill']required=True),
             username=dict(required=False,default=None),
             password=dict(required=False,default=None),
             id=dict(type='str'),
@@ -443,15 +448,15 @@ def main():
         supports_check_mode=False
     )
 
-    op = module.params['operation']
+    state = module.params['state']
 
     # Check we have the necessary per-operation parameters
     missing = []
-    for parm in OP_REQUIRED[op]:
+    for parm in OP_REQUIRED[state]:
         if not module.params[parm]:
             missing.append(parm)
     if missing:
-        module.fail_json(msg="Operation %s require the following missing parameters: %s" % (op, ",".join(missing)))
+        module.fail_json(msg="Operation %s require the following missing parameters: %s" % (state, ",".join(missing)))
 
     # Handle rest of parameters
     uri = module.params['uri']
@@ -477,7 +482,7 @@ def main():
         # Lookup the corresponding method for this operation. This is
         # safe as the AnsibleModule should remove any unknown operations.
         thismod = sys.modules[__name__]
-        method = getattr(thismod, op)
+        method = getattr(thismod, state)
 
         ret = method(restbase, user, passwd, module.params)
 
