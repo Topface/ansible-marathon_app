@@ -479,8 +479,14 @@ def main():
     user = module.params['username']
     passwd = module.params['password']
 
+    # Ensure that we use int values for port mappings
+    if module.params['docker_portMappings']:
+      mappings = module.params['docker_portMappings']
+      mappings = [{k:int(v) for k,v in kv.iteritems()} for kv in mappings]
+      module.params['docker_portMappings'] = mappings
+
     if module.params['docker_image'] and not module.params['container']:
-    	module.params['container'] = { 'type': 'DOCKER', 'docker': { 'image': module.params['docker_image'], 'forcePullImage': module.params['docker_forcePullImage'], 'privileged': module.params['docker_privileged'], 'network': module.params['docker_network'], 'parameters': module.params['docker_parameters'], 'portMappings': module.params['docker_portMappings']}, 'volumes': module.params['container_volumes']}
+    	module.params['container'] = { 'type': 'DOCKER', 'docker': { 'image': module.params['docker_image'], 'forcePullImage': bool(module.params['docker_forcePullImage']), 'privileged': bool(module.params['docker_privileged']), 'network': module.params['docker_network'], 'parameters': module.params['docker_parameters'], 'portMappings': module.params['docker_portMappings']}, 'volumes': module.params['container_volumes']}
 
     if module.params['upgradeStrategy_minimumHealthCapacity']:
     	module.params['upgradeStrategy'].update({'minimumHealthCapacity': module.params['upgradeStrategy_minimumHealthCapacity']})
