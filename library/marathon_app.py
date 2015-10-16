@@ -283,6 +283,25 @@ def request(url, user=None, passwd=None, data=None, method=None):
     else:
         return {}
 
+def tryRequest(url, user=None, passwd=None, data=None, method=None):
+    if not user:
+      auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
+      response, info = fetch_url(module, url, data=data, method=method,
+                               headers={'Content-Type':'application/json',
+                                        'Authorization':"Basic %s" % auth})
+    else:
+      response, info = fetch_url(module, url, data=data, method=method,
+                               headers={'Content-Type':'application/json'})
+
+    body = {}
+
+    if info['status'] in (200, 204):
+        raw_body = response.read()
+        if raw_body:
+          body = json.loads(raw_body)
+
+    return (body, info)
+
 def post(url, user, passwd, data):
     return request(url, user, passwd, data=data, method='POST')
 
@@ -320,7 +339,7 @@ def edit(restbase, user, passwd, params):
     	if params[arg]:
     		data.update({arg: params[arg]})
 
-    url = restbase + '/apps?force=' + params['force']
+    url = restbase + '/apps/' + params['id'] + '?force=' + str(params['force']).lower()
 
     ret = put(url, user, passwd, data) 
 
@@ -334,23 +353,12 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
 
   while True:
     url = restbase + '/deployments'
-    if not user:
-      auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
-      response, info = fetch_url(module, url, data=None, method=None, 
-                               headers={'Content-Type':'application/json',
-                                        'Authorization':"Basic %s" % auth})
-    else:
-      response, info = fetch_url(module, url, data=None, method=None, 
-                               headers={'Content-Type':'application/json'})
+    deployments, info = tryRequest(url, user, passwd)
 
     if info['status'] in (200, 204):
-      body = response.read()
-
-      if body:
-        deployments = json.loads(body)
-        deploymentIds = map(lambda x: x['id'], deployments)
-        if deploymentId not in deploymentIds:
-          return
+      deploymentIds = map(lambda x: x['id'], deployments)
+      if deploymentId not in deploymentIds:
+        return
 
     response.close()
     time.sleep(1)
@@ -389,8 +397,14 @@ def absent(restbase, user, passwd, params):
     return destroy(restbase, user, passwd, params)
 
 def present(restbase, user, passwd, params):
-    # TODO: check if already present, if yes edit container
-    return create(restbase, user, passwd, params)
+    app, info = tryRequest(restbase + '/apps/' + params['id'], user, passwd)
+
+    if info['status'] in (200, 204):
+      if app['app']['state'] == 'TASK_FAILED':
+        destroy(restbase, user, passwd, params)
+      return edit(restbase, user, passwd, params)
+    else:
+      return create(restbase, user, passwd, params)
 
 def kill(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id'] + '/tasks'  
@@ -409,7 +423,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             uri=dict(required=True),
-            state=dict(choices=['absent', 'present', 'restart', 'kill']required=True),
+            state=dict(choices=['absent', 'present', 'restart', 'kill'], required=True),
             username=dict(required=False,default=None),
             password=dict(required=False,default=None),
             id=dict(type='str'),
@@ -496,4 +510,3 @@ def main():
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *
 main()
-
