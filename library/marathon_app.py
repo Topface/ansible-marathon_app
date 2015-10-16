@@ -341,10 +341,10 @@ def edit(restbase, user, passwd, params):
 
     url = restbase + '/apps/' + params['id'] + '?force=' + str(params['force']).lower()
 
-    ret = put(url, user, passwd, data) 
+    ret = put(url, user, passwd, data)
 
     if params['waitTimeout']:
-      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
+      waitForDeployment(restbase, user, passwd, params, ret['deploymentId'])
 
     return ret
 
@@ -360,7 +360,6 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
       if deploymentId not in deploymentIds:
         return
 
-    response.close()
     time.sleep(1)
 
     if time.time() > timeout:
@@ -400,9 +399,12 @@ def present(restbase, user, passwd, params):
     app, info = tryRequest(restbase + '/apps/' + params['id'], user, passwd)
 
     if info['status'] in (200, 204):
-      if app['app']['state'] == 'TASK_FAILED':
+      # Destroy apps which seem stuck into deployment
+      if len(app['app']['deployments']) > 0:
         destroy(restbase, user, passwd, params)
-      return edit(restbase, user, passwd, params)
+        return create(restbase, user, passwd, params)
+      else:
+        return edit(restbase, user, passwd, params)
     else:
       return create(restbase, user, passwd, params)
 
