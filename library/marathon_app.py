@@ -64,6 +64,11 @@ options:
     description:
      - The amount of memory in MB that is needed for the application per instance.
 
+  disk:
+    required: false
+    description:
+     - The amount of disk in MB that is reserved for the application per instance.
+
   ports:
     required: false
     description:
@@ -149,6 +154,11 @@ options:
     description:
      - URIs defined here are resolved, before the application gets started. If the application has external dependencies, they should be defined here.
 
+  storeUrls:
+    required: false
+    description:
+     - a sequence of URIs, that get fetched on each instance, that gets started. The artifact could be fetched directly from the source, or put into the artifact store. One simple way to do this is automatic artifact storing.
+
   dependencies:
     required: false
     description:
@@ -198,71 +208,52 @@ author: "Ludovic Claude (@ludovicc)"
 """
 
 EXAMPLES = """
-TODO
-# Create a new issue and add a comment to it:
-- name: Create an issue
-  jira: uri={{server}} username={{user}} password={{pass}}
-        project=ANS operation=create
-        summary="Example Issue" description="Created using Ansible" issuetype=Task
-  register: issue
+# Launch Postgres in a Docker container using Marathon, wait for the deployment to complete
+- name: Launch Postgres using Marathon
+  marathon_app:
+    uri: "{{ marathon_url }}"
+    id: "/postgres"
+    state: "present"
+    docker_image: "postgres:{{ postgres_version }}"
+    docker_forcePullImage: true
+    docker_network: BRIDGE
+    docker_portMappings:
+      - hostPort: 31432
+        containerPort: 5432
+    container_volumes:
+      - containerPath: "/var/lib/postgresql/data"
+        hostPath: "{{ postgres_data_dir }}"
+        mode: RW
+    env:
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+    instances: 1
+    cpus: 0.2
+    mem: 128
+    ports: []
+    requirePorts: false
+    constraints: []
+    dependencies: []
+    executor: ""
+    waitTimeout: 600
+  async: 600
+  poll: 1
 
-- name: Comment on issue
-  jira: uri={{server}} username={{user}} password={{pass}}
-        issue={{issue.meta.key}} operation=comment 
-        comment="A comment added by Ansible"
+# Remove an application from Marathon
+- name: Remove an old app from Marathon
+  marathon_app:
+    uri: "{{ marathon_url }}"
+    id: "/oldapp"
+    state: "absent"
 
-# Assign an existing issue using edit
-- name: Assign an issue using free-form fields
-  jira: uri={{server}} username={{user}} password={{pass}}
-        issue={{issue.meta.key}} operation=edit
-        assignee=ssmith
-
-# Create an issue with an existing assignee
-- name: Create an assigned issue
-  jira: uri={{server}} username={{user}} password={{pass}}
-        project=ANS operation=create
-        summary="Assigned issue" description="Created and assigned using Ansible" 
-        issuetype=Task assignee=ssmith
-
-# Edit an issue using free-form fields
-- name: Set the labels on an issue using free-form fields
-  jira: uri={{server}} username={{user}} password={{pass}}
-        issue={{issue.meta.key}} operation=edit 
-  args: { fields: {labels: ["autocreated", "ansible"]}}
-
-- name: Set the labels on an issue, YAML version
-  jira: uri={{server}} username={{user}} password={{pass}}
-        issue={{issue.meta.key}} operation=edit 
-  args: 
-    fields: 
-      labels:
-        - "autocreated"
-        - "ansible"
-        - "yaml"
-
-# Retrieve metadata for an issue and use it to create an account
-- name: Get an issue
-  jira: uri={{server}} username={{user}} password={{pass}}
-        project=ANS operation=fetch issue="ANS-63"
-  register: issue
-
-- name: Create a unix account for the reporter
-  sudo: true
-  user: name="{{issue.meta.fields.creator.name}}" comment="{{issue.meta.fields.creator.displayName}}"
-
-# Transition an issue by target status
-- name: Close the issue
-  jira: uri={{server}} username={{user}} password={{pass}}
-        issue={{issue.meta.key}} operation=transition status="Done"
 """
 
-import json
 import base64
-import time
 
 def request(url, user=None, passwd=None, data=None, method=None):
     if data:
         data = json.dumps(data)
+
 
     if not user:
       auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
@@ -365,6 +356,7 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
     if time.time() > timeout:
       module.fail_json(msg='Timeout waiting for deployment.')
 
+    return
 
 def restart(restbase, user, passwd, params):
     data = {
@@ -432,30 +424,31 @@ def main():
             cmd=dict(aliases=['command'], type='str'),
             args=dict(aliases=['arguments'], type='list'),
             cpus=dict(type='float'),
-            mem=dict(aliases=['memory']),
-            ports=dict(type='list'),
+            mem=dict(aliases=['memory'],type='int'),
+            disk=dict(default=0,type='int'),
+            ports=dict(default=[],type='list'),
             requirePorts=dict(default=False, type='bool'),
-            instances=dict(),
-            executor=dict(),
-            container=dict(),
+            instances=dict(type='int'),
+            executor=dict(default="",type='str'),
+            container=dict(type='dict'),
             docker_image=dict(),
             docker_forcePullImage=dict(default=False, type='bool'),
             docker_privileged=dict(default=False, type='bool'),
             docker_network=dict(default='none', type='str'),
-            docker_parameters=dict(default=[]),
-            docker_portMappings=dict(default=[]),
-            container_volumes=dict(default=[]),
+            docker_parameters=dict(default=[],type='list'),
+            docker_portMappings=dict(default=[],type='list'),
+            container_volumes=dict(default=[],type='list'),
             env=dict(default={},type='dict'),
-            constraints=dict(type='list'),
+            constraints=dict(default=[],type='list'),
             acceptedResourceRoles=dict(),
             labels=dict(type='list'),
-            uris=dict(type='list'),
-            dependencies=dict(type='list'),
-            healthChecks=dict(type='list'),
+            uris=dict(default=[],type='list'),
+            dependencies=dict(default=[],type='list'),
+            healthChecks=dict(default=[],type='list'),
             backoffSeconds=dict(type='float'),
             backoffFactor=dict(type='float'),
             maxLaunchDelaySeconds=dict(type='float'),
-            upgradeStrategy=dict(default={}),
+            upgradeStrategy=dict(default={},type='dict'),
             upgradeStrategy_minimumHealthCapacity=dict(),
             upgradeStrategy_maximumOverCapacity=dict(),
             force=dict(default=False, type='bool'),
@@ -482,7 +475,7 @@ def main():
     # Ensure that we use int values for port mappings
     if module.params['docker_portMappings']:
       mappings = module.params['docker_portMappings']
-      mappings = [{k:int(v) for k,v in kv.iteritems()} for kv in mappings]
+      mappings = [dict((k, int(v)) for k,v in kv.iteritems()) for kv in mappings]
       module.params['docker_portMappings'] = mappings
 
     if module.params['docker_image'] and not module.params['container']:
