@@ -435,6 +435,7 @@ def main():
             requirePorts=dict(default=False, type='bool'),
             instances=dict(type='int'),
             executor=dict(default="",type='str'),
+            user=dict(type='str'),
             container=dict(type='dict'),
             docker_image=dict(),
             docker_forcePullImage=dict(default=False, type='bool'),
