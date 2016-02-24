@@ -56,153 +56,158 @@ options:
   cpus:
     required: false
     description:
-     - The number of CPU`s this application needs per instance. This number does not have to be integer, but can be a fraction.
+      - The number of CPU`s this application needs per instance. This number does not have to be integer, but can be a fraction.
 
   memory:
     aliases: [ mem ]
     required: false
     description:
-     - The amount of memory in MB that is needed for the application per instance.
+      - The amount of memory in MB that is needed for the application per instance.
 
   disk:
     required: false
     description:
-     - The amount of disk in MB that is reserved for the application per instance.
+      - The amount of disk in MB that is reserved for the application per instance.
 
   ports:
     required: false
     description:
-     - An array of required port resources on the host.
+      - An array of required port resources on the host.
 
   requirePorts:
     required: false
     description:
-     - If true, the ports you have specified are used as host ports.
+      - If true, the ports you have specified are used as host ports.
 
   instances:
     required: false
     description:
-     - The number of instances of this application to start.
+      - The number of instances of this application to start.
 
   executor:
     required: false
     description:
-     - The executor to use to launch this application.
+      - The executor to use to launch this application.
+
+  user:
+    required: false
+    description:
+      - The user to use to launch this application.
 
   container:
     required: false
     description:
-     - Additional data passed to the containerizer on application launch. This is a free-form data structure that can contain arbitrary data.
+      - Additional data passed to the containerizer on application launch. This is a free-form data structure that can contain arbitrary data.
 
   docker_image:
     required: false
     description:
-     - Name of the Docker image. Ignored if container is defined.
+      - Name of the Docker image. Ignored if container is defined.
 
   docker_forcePullImage:
     required: false
     description:
-     - Force Docker to pull the image before launching each task. Ignored if container is defined.
+      - Force Docker to pull the image before launching each task. Ignored if container is defined.
 
   docker_privileged:
     required: false
     description:
-     - Allows users to run containers in privileged mode. Ignored if container is defined.
+      - Allows users to run containers in privileged mode. Ignored if container is defined.
 
   docker_network:
     required: false
     description:
-     - Type of networking for the Docker container. Ignored if container is defined.
+      - Type of networking for the Docker container. Ignored if container is defined.
 
   docker_portMappings:
     required: false
     description:
-     - Port mappings for the Docker container. Ignored if container is defined.
+      - Port mappings for the Docker container. Ignored if container is defined.
 
   docker_parameters:
     required: false
     description:
-     - Arbitrary parameters for the Docker container. Ignored if container is defined.
+      - Arbitrary parameters for the Docker container. Ignored if container is defined.
 
   container_volumes:
     required: false
     description:
-     - Array of volumes for the container. Ignored if container is defined.
+      - Array of volumes for the container. Ignored if container is defined.
 
   env:
     required: false
     description:
-     - Key value pairs that get added to the environment variables of the process to start.
+      - Key value pairs that get added to the environment variables of the process to start.
 
   constraints:
     required: false
     description:
-     - Valid constraint operators are one of ["UNIQUE", "CLUSTER", "GROUP_BY"].
+      - Valid constraint operators are one of ["UNIQUE", "CLUSTER", "GROUP_BY"].
 
   acceptedResourceRoles:
     required: false
     description:
-     - A list of resource roles.
+      - A list of resource roles.
 
   labels:
     required: false
     description:
-     - Attaching metadata to apps can be useful to expose additional information to other services, so we added the ability to place labels on apps.
+      - Attaching metadata to apps can be useful to expose additional information to other services, so we added the ability to place labels on apps.
 
   uris:
     required: false
     description:
-     - URIs defined here are resolved, before the application gets started. If the application has external dependencies, they should be defined here.
+      - URIs defined here are resolved, before the application gets started. If the application has external dependencies, they should be defined here.
 
   storeUrls:
     required: false
     description:
-     - a sequence of URIs, that get fetched on each instance, that gets started. The artifact could be fetched directly from the source, or put into the artifact store. One simple way to do this is automatic artifact storing.
+      - a sequence of URIs, that get fetched on each instance, that gets started. The artifact could be fetched directly from the source, or put into the artifact store. One simple way to do this is automatic artifact storing.
 
   dependencies:
     required: false
     description:
-     - A list of services upon which this application depends.
+      - A list of services upon which this application depends.
 
   healthChecks:
     required: false
     description:
-     - An array of checks to be performed on running tasks to determine if they are operating as expected.
+      - An array of checks to be performed on running tasks to determine if they are operating as expected.
 
   backoffSeconds:
     required: false
     description:
-     - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
+      - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
 
   backoffFactor:
     required: false
     description:
-     - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
+      - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
 
   maxLaunchDelaySeconds:
     required: false
     description:
-     - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
+      - Configures exponential backoff behavior when launching potentially sick apps. The backoff period is multiplied by the factor for each consecutive failure until it reaches maxLaunchDelaySeconds.
 
   upgradeStrategy_minimumHealthCapacity:
     required: false
     description:
-     - a number between 0and 1 that is multiplied with the instance count. This is the minimum number of healthy nodes that do not sacrifice overall application purpose.
+      - a number between 0and 1 that is multiplied with the instance count. This is the minimum number of healthy nodes that do not sacrifice overall application purpose.
 
   upgradeStrategy_maximumOverCapacity:
     required: false
     description:
-     - a number between 0 and 1 which is multiplied with the instance count. This is the maximum number of additional instances launched at any point of time during the upgrade process.
+      - a number between 0 and 1 which is multiplied with the instance count. This is the maximum number of additional instances launched at any point of time during the upgrade process.
 
   force:
     required: false
     description:
-     - If the app is affected by a running deployment, then the update operation will fail. The current deployment can be overridden by setting the `force` query parameter. Default: false.
+      - If the app is affected by a running deployment, then the update operation will fail. The current deployment can be overridden by setting the `force` query parameter. Default: false.
 
   waitTimeout:
     required: false
     description:
-     - If set and the operation is create or update, wait for the application to become available until timeout seconds.
+      - If set and the operation is create or update, wait for the application to become available until timeout seconds.
 
 author: "Ludovic Claude (@ludovicc)"
 """
