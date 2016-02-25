@@ -314,7 +314,7 @@ def create(restbase, user, passwd, params):
     data = {'id': params['id']}
 
     # Merge in any additional or overridden fields
-    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'user', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
     	if params[arg]:
     		data.update({arg: params[arg]})
 
@@ -331,7 +331,7 @@ def edit(restbase, user, passwd, params):
     data = {'id': params['id']}
 
     # Merge in any additional or overridden fields
-    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'user', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
     	if params[arg]:
     		data.update({arg: params[arg]})
 
