@@ -251,6 +251,7 @@ EXAMPLES = """
     uri: "{{ marathon_url }}"
     id: "/oldapp"
     state: "absent"
+"""
 
 RETURN = """
 uri:
