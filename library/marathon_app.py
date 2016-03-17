@@ -208,7 +208,7 @@ options:
   waitTimeout:
     required: false
     description:
-      - If set and the operation is create or update, wait for the application to become available until timeout seconds.
+      - If set, wait for the application to become available until timeout seconds.
 
 author: "Ludovic Claude (@ludovicc)"
 """
@@ -324,8 +324,13 @@ def put(url, user, passwd, data):
 def get(url, user, passwd):
     return request(url, user, passwd)
 
-def delete(url, user, passwd):
-    return request(url, user, passwd, data=None, method='DELETE')
+def delete(url, user, passwd, params):
+    ret, info = tryRequest(url, user, passwd, data=None, method='DELETE')
+
+    if params['waitTimeout'] and info['status'] in (200, 204) and 'deployments' in ret and length(ret['deployments']) > 0:
+      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
+
+    return ret
 
 def create(restbase, user, passwd, params):
     data = {'id': params['id']}
@@ -389,6 +394,9 @@ def restart(restbase, user, passwd, params):
 
     ret = post(url, user, passwd, data) 
 
+    if params['waitTimeout']:
+      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
+
     return ret
 
 def fetch(restbase, user, passwd, params):
@@ -403,7 +411,7 @@ def versions(restbase, user, passwd, params):
 
 def destroy(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id']
-    ret = delete(url, user, passwd) 
+    ret = delete(url, user, passwd, params)
     return ret
 
 def absent(restbase, user, passwd, params):
@@ -424,7 +432,11 @@ def present(restbase, user, passwd, params):
 
 def kill(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id'] + '/tasks'  
-    ret = delete(url, user, passwd) 
+    ret = delete(url, user, passwd, params)
+
+    if params['waitTimeout']:
+      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
+    
     return ret
 
 # Some parameters are required depending on the operation:
