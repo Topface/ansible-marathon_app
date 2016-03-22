@@ -292,12 +292,6 @@ def request(url, user=None, passwd=None, data=None, method=None):
     body = response.read()
 
     if body:
-        fn = url.replace('http://','').replace('/','_')
-        if (method is not None):
-          fn = method + '-' + fn
-        f = open('/tmp/' + fn, 'w')
-        f.write(body)
-        f.close()
         return json.loads(body)
     else:
         return {}
@@ -317,14 +311,6 @@ def tryRequest(url, user=None, passwd=None, data=None, method=None):
     if info['status'] in (200, 204):
         raw_body = response.read()
         if raw_body:
-          fn = url.replace('http://','').replace('/','_')
-          if (method is not None):
-            fn = method + '-' + fn
-          f = open('/tmp/' + fn, 'w')
-          f.write(str(info))
-          f.write('\n')
-          f.write(raw_body)
-          f.close()
           body = json.loads(raw_body)
 
     return (body, info)
