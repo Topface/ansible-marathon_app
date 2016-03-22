@@ -327,8 +327,8 @@ def get(url, user, passwd):
 def delete(url, user, passwd, params):
     ret, info = tryRequest(url, user, passwd, data=None, method='DELETE')
 
-    if params['waitTimeout'] and info['status'] in (200, 204) and 'deployments' in ret and length(ret['deployments']) > 0:
-      waitForDeployment(restbase, user, passwd, params, ret['deployments'][0]['id'])
+    if params['waitTimeout'] and info['status'] in (200, 204) and 'deploymentId' in ret:
+      waitForDeployment(url, user, passwd, params, ret['deploymentId'])
 
     return ret
 
