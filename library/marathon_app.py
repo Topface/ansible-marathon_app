@@ -668,7 +668,7 @@ def main():
         return module.fail_json(msg=e.message)
 
 
-    module.exit_json(changed=ret.changed, uri=uri, state=state, meta=ret.meta)
+    module.exit_json(changed=ret['changed'], uri=uri, state=state, meta=ret['meta'])
 
 
 from ansible.module_utils.basic import *
