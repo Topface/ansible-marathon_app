@@ -391,7 +391,7 @@ def request(url, user=None, passwd=None, data=None, method=None):
         response, info = fetch_url(module, url, data=data, method=method,
                                    headers={'Content-Type':'application/json'})
 
-    if info['status'] not in (200, 204):
+    if info['status'] not in (200, 201, 204):
         module.fail_json(msg=info['msg'])
 
     body = response.read()
