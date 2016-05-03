@@ -478,7 +478,10 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
         url = restbase + '/deployments'
         deployments, info = tryRequest(url, user, passwd)
 
-        if info['status'] in (200, 204):
+        if info['status'] == 404:
+          return
+
+        if info['status'] in (200, 201, 204):
             deploymentIds = map(lambda x: x['id'], deployments)
             if deploymentId not in deploymentIds:
                 return
@@ -488,7 +491,7 @@ def waitForDeployment(restbase, user, passwd, params, deploymentId):
         if time.time() > timeout:
             module.fail_json(msg='Timeout waiting for deployment.')
 
-        return
+    return
 
 def restart(restbase, user, passwd, params):
     data = {
