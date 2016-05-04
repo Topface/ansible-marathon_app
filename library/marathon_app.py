@@ -8,7 +8,7 @@
 
 DOCUMENTATION = """
 module: marathon_app
-version_added: "2.1"
+version_added: "2.2"
 short_description: start and stop applications with Marathon
 description:
   - Start and stop applications with Marathon.
@@ -625,6 +625,20 @@ def main():
     uri = module.params['uri']
     user = module.params['username']
     passwd = module.params['password']
+
+    # Ensure that we use int values for ports
+    if module.params['ports']:
+        ports = module.params['ports']
+        ports = [int(port) for port in ports]
+        module.params['ports'] = ports
+
+    # Ensure that we use int values for ports in port definitions
+    if module.params['portDefinitions']:
+        portDefinitions = module.params['portDefinitions']
+        for portDefinition in portDefinitions:
+            if 'port' in portDefinition:
+              portDefinition['port'] = int(portDefinition['port'])
+        module.params['portDefinitions'] = portDefinitions
 
     # Ensure that we use int values for port mappings
     if module.params['docker_portMappings']:
