@@ -380,21 +380,83 @@ import base64
 
 MARATHON_APP_PARAMETERS = ['cmd', 'args', 'cpus', 'mem', 'disk', 'ports', 'requirePorts', 'portDefinitions', 'ipAddress', 'instances', 'executor', 'user', 'container', 'residency', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'storeUrls', 'dependencies', 'fetch', 'healthChecks', 'readinessChecks', 'backoffSeconds', 'backoffFactor', 'maxLaunchDelaySeconds', 'upgradeStrategy', 'version', 'versionInfo']
 
+def fetch_url2(module, url, data=None, headers=None, method=None,
+              use_proxy=True, force=False, last_mod_time=None, timeout=10):
+    '''
+    Variation of fetch_url returning more information in case of error
+    '''
+
+    if not HAS_URLLIB2:
+        module.fail_json(msg='urllib2 is not installed')
+    elif not HAS_URLPARSE:
+        module.fail_json(msg='urlparse is not installed')
+
+    # Get validate_certs from the module params
+    validate_certs = module.params.get('validate_certs', True)
+
+    username = module.params.get('url_username', '')
+    password = module.params.get('url_password', '')
+    http_agent = module.params.get('http_agent', None)
+    force_basic_auth = module.params.get('force_basic_auth', '')
+
+    follow_redirects = module.params.get('follow_redirects', 'urllib2')
+
+    r = None
+    info = dict(url=url)
+    try:
+        r = open_url(url, data=data, headers=headers, method=method,
+                     use_proxy=use_proxy, force=force, last_mod_time=last_mod_time, timeout=timeout,
+                     validate_certs=validate_certs, url_username=username,
+                     url_password=password, http_agent=http_agent, force_basic_auth=force_basic_auth,
+                     follow_redirects=follow_redirects)
+        info.update(r.info())
+        info['url'] = r.geturl()  # The URL goes in too, because of redirects.
+        info.update(dict(msg="OK (%s bytes)" % r.headers.get('Content-Length', 'unknown'), status=200))
+    except NoSSLError, e:
+        distribution = get_distribution()
+        if distribution is not None and distribution.lower() == 'redhat':
+            module.fail_json(msg='%s. You can also install python-ssl from EPEL' % str(e))
+        else:
+            module.fail_json(msg='%s' % str(e))
+    except (ConnectionError, ValueError), e:
+        module.fail_json(msg=str(e))
+    except urllib2.HTTPError, e:
+        body = {}
+        if e.code in (400, 401, 403, 409, 422):
+            body = e.read()
+        info.update(dict(msg=str(e), body=body, status=e.code, **e.info()))
+    except urllib2.URLError, e:
+        code = int(getattr(e, 'code', -1))
+        info.update(dict(msg="Request failed: %s" % str(e), body=None, status=code))
+    except socket.error, e:
+        info.update(dict(msg="Connection failure: %s" % str(e), body=None, status=-1))
+    except Exception, e:
+        info.update(dict(msg="An unknown error occurred: %s" % str(e), body=None, status=-1))
+
+    return r, info
+
 def request(url, user=None, passwd=None, data=None, method=None):
     if data:
         data = json.dumps(data)
 
     if user is not None:
         auth = base64.encodestring('%s:%s' % (user, passwd)).replace('\n', '')
-        response, info = fetch_url(module, url, data=data, method=method,
+        response, info = fetch_url2(module, url, data=data, method=method,
                                    headers={'Content-Type':'application/json',
                                             'Authorization':"Basic %s" % auth})
     else:
-        response, info = fetch_url(module, url, data=data, method=method,
+        response, info = fetch_url2(module, url, data=data, method=method,
                                    headers={'Content-Type':'application/json'})
 
     if info['status'] not in (200, 201, 204):
-        module.fail_json(msg=info['msg'])
+        msg = info['msg']
+        body = info['body']
+        if body:
+            body = json.loads(body)
+        else:
+            body = {}
+
+        module.fail_json(msg=msg,response=body)
 
     body = response.read()
 
