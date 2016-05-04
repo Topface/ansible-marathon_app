@@ -378,6 +378,8 @@ meta:
 
 import base64
 
+MARATHON_APP_PARAMETERS = ['cmd', 'args', 'cpus', 'mem', 'disk', 'ports', 'requirePorts', 'portDefinitions', 'ipAddress', 'instances', 'executor', 'user', 'container', 'residency', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'storeUrls', 'dependencies', 'fetch', 'healthChecks', 'readinessChecks', 'backoffSeconds', 'backoffFactor', 'maxLaunchDelaySeconds', 'upgradeStrategy', 'version', 'versionInfo']
+
 def request(url, user=None, passwd=None, data=None, method=None):
     if data:
         data = json.dumps(data)
@@ -441,7 +443,7 @@ def create(restbase, user, passwd, params):
     data = {'id': params['id']}
 
     # Merge in any additional or overridden fields
-    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'user', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    for arg in MARATHON_APP_PARAMETERS:
         if params[arg]:
             data.update({arg: params[arg]})
 
@@ -458,7 +460,7 @@ def edit(restbase, user, passwd, params):
     data = {'id': params['id']}
 
     # Merge in any additional or overridden fields
-    for arg in ['cmd', 'args', 'cpus', 'mem', 'ports', 'requirePorts', 'instances', 'user', 'executor', 'container', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'dependencies', 'healthChecks', 'backoffFactor', 'backoffSeconds', 'maxLaunchDelaySeconds', 'upgradeStrategy']:
+    for arg in MARATHON_APP_PARAMETERS:
         if params[arg]:
             data.update({arg: params[arg]})
 
