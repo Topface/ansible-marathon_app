@@ -415,7 +415,7 @@ def tryRequest(url, user=None, passwd=None, data=None, method=None):
 
     body = {}
 
-    if info['status'] in (200, 204):
+    if info['status'] in (200, 201, 204):
         raw_body = response.read()
         if raw_body:
             body = json.loads(raw_body)
