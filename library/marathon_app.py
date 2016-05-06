@@ -707,7 +707,10 @@ def main():
     # Ensure that we use int values for port mappings
     if module.params['docker_portMappings']:
         mappings = module.params['docker_portMappings']
-        mappings = [dict((k, int(v)) for k,v in kv.iteritems()) for kv in mappings]
+        for mapping in mappings:
+            for param in ['containerPort', 'hostPort', 'servicePort']:
+                if param in mapping:
+                    mapping[param] = int(mapping[param])
         module.params['docker_portMappings'] = mappings
 
     # Ensure that we use int values for some healthChecks parameters
