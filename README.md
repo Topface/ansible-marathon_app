@@ -16,7 +16,7 @@ set to `true` by default
 
 ### Example
 
-The next playbook deploys [Chronos](https://airbnb.github.io/chronos/)
+The next playbook deploys [Chronos](https://mesos.github.io/chronos/)
 on marathon with single instance and waits for deployment to finish.
 
 ```yaml
