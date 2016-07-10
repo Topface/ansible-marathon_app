@@ -537,7 +537,7 @@ def edit(restbase, user, passwd, params):
 
 def waitForDeployment(restbase, user, passwd, params, deploymentId):
     timeout = time.time() + params['waitTimeout']
-  
+
     while True:
         url = restbase + '/deployments'
         deployments, info = tryRequest(url, user, passwd)
@@ -721,6 +721,13 @@ def main():
                 if param in checks:
                     checks[param] = int(checks[param])
         module.params['healthChecks'] = healthChecks
+
+    # Ensure that we use string values for env parameters
+    if module.params['env']:
+        env = module.params['env']
+        for key, value in env.iteritems():
+          env[key] = str(env[key])
+        module.params['env'] = env
 
     if module.params['docker_image'] and not module.params['container']:
         module.params['container'] = { 'type': 'DOCKER', 'docker': { 'image': module.params['docker_image'], 'forcePullImage': bool(module.params['docker_forcePullImage']), 'privileged': bool(module.params['docker_privileged']), 'network': module.params['docker_network'], 'parameters': module.params['docker_parameters'], 'portMappings': module.params['docker_portMappings']}, 'volumes': module.params['container_volumes']}
