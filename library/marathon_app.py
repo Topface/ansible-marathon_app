@@ -655,7 +655,7 @@ def main():
             env=dict(default={}, type='dict'),
             constraints=dict(default=[], type='list'),
             acceptedResourceRoles=dict(aliases=['accepted_resource_roles'], default=[], type='list'),
-            labels=dict(type='list'),
+            labels=dict(default={}, type='dict'),
             uris=dict(default=[], type='list'),
             dependencies=dict(default=[], type='list'),
             fetch=dict(default=[], type='list'),
