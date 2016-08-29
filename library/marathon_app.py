@@ -495,11 +495,10 @@ def get(url, user, passwd):
 
 def delete(url, user, passwd, params):
     ret, info = tryRequest(url, user, passwd, data=None, method='DELETE')
-
-    if params['waitTimeout'] and info['status'] in (200, 204) and 'deploymentId' in ret:
-        waitForDeployment(url, user, passwd, params, ret['deploymentId'])
-
-    return {'meta': ret, 'changed': 'deploymentId' in ret}
+    result = {'meta': ret, 'changed': info['status'] in (200, 204) and 'deploymentId' in ret}
+    if 'deploymentId' in ret:
+        result['deploymentId'] = ret['deploymentId']
+    return result
 
 def create(restbase, user, passwd, params):
     data = {'id': params['id']}
@@ -584,6 +583,9 @@ def versions(restbase, user, passwd, params):
 def destroy(restbase, user, passwd, params):
     url = restbase + '/apps/' + params['id']
     ret = delete(url, user, passwd, params)
+    if params['waitTimeout'] and ret['changed']:
+        waitForDeployment(restbase, user, passwd, params, ret['deploymentId'])
+        ret.pop('deploymentId', None)
     return ret
 
 def absent(restbase, user, passwd, params):
