@@ -456,7 +456,7 @@ def request(url, user=None, passwd=None, data=None, method=None):
         else:
             body = {}
 
-        module.fail_json(msg=msg,response=body)
+        module.fail_json(msg=msg, response=body, data=data)
 
     body = response.read()
 
@@ -667,8 +667,8 @@ def main():
             backoffFactor=dict(aliases=['backoff_factor'], type='float', default=1.15),
             maxLaunchDelaySeconds=dict(aliases=['max_launch_delay_seconds'], type='float', default=3600.0),
             upgradeStrategy=dict(aliases=['upgrade_strategy'], default={}, type='dict'),
-            upgradeStrategy_minimumHealthCapacity=dict(aliases=['upgrade_strategy_minimum_health_capacity'], default=0.0, type='float'),
-            upgradeStrategy_maximumOverCapacity=dict(aliases=['upgrade_strategy_maximum_over_capacity'], default=0.0, type='float'),
+            upgradeStrategy_minimumHealthCapacity=dict(aliases=['upgrade_strategy_minimum_health_capacity'], type='float'),
+            upgradeStrategy_maximumOverCapacity=dict(aliases=['upgrade_strategy_maximum_over_capacity'], type='float'),
             force=dict(default=False, type='bool'),
             waitTimeout=dict(aliases=['wait_timeout'], type='int'),
             validate_certs=dict(required=False, default=True, type='bool')
@@ -737,10 +737,10 @@ def main():
         if module.params['container_volumes'] and not module.params['container']:
             module.params['container'] = { 'type': module.params['container_type'], 'volumes': module.params['container_volumes']}
 
-    if module.params['upgradeStrategy_minimumHealthCapacity']:
+    if module.params['upgradeStrategy_minimumHealthCapacity'] != None:
         module.params['upgradeStrategy'].update({'minimumHealthCapacity': module.params['upgradeStrategy_minimumHealthCapacity']})
 
-    if module.params['upgradeStrategy_maximumOverCapacity']:
+    if module.params['upgradeStrategy_maximumOverCapacity'] != None:
         module.params['upgradeStrategy'].update({'maximumOverCapacity': module.params['upgradeStrategy_maximumOverCapacity']})
 
     if not uri.endswith('/'):
