@@ -24,14 +24,6 @@ def fix_named_type(name, a):
 
     if a is None:
         return a
-
-    forceInt = needInt(name)
-    forceFloat = needFloat(name)
-
-    if forceInt and isinstance(a, (int, long)):
-        return a
-    elif forceFloat and isinstance(a, float):
-        return a
     elif isinstance(a, dict):
         casted_dict = dict()
         for k,v in a.iteritems():
@@ -39,12 +31,12 @@ def fix_named_type(name, a):
         return casted_dict
     elif isinstance(a, list):
         return map(partial(fix_named_type, name + "[]"), a)
-    elif forceInt and isinstance(a, basestring):
+    elif needInt(name) and (isinstance(a, basestring) or isinstance(a, float)):
         try:
             return int(a)
         except ValueError:
             return a
-    elif forceFloat and isinstance(a, basestring):
+    elif needFloat(name) and isinstance(a, basestring):
         try:
             return float(a)
         except ValueError:
