@@ -4,7 +4,7 @@
     url="{{ marathon_url }}/v2/apps{{ marathon_app.id }}"
     method=PUT
     HEADER_Content-Type="application/json"
-    body='{{ marathon_app | to_json }}'
+    body='{{ marathon_app | fix_marathon_types | to_json }}'
     status_code=200,201
   register: marathon_deployment
 
