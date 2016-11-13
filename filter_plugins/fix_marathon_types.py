@@ -16,9 +16,9 @@ def needInt(a):
 
 def needFloat(a):
     return a in (
-        "disk",
-        "cpus",
-        "mem")
+        "/disk",
+        "/cpus",
+        "/mem")
 
 def fix_named_type(name, a):
 
@@ -31,16 +31,10 @@ def fix_named_type(name, a):
         return casted_dict
     elif isinstance(a, list):
         return map(partial(fix_named_type, name + "[]"), a)
-    elif needInt(name) and (isinstance(a, basestring) or isinstance(a, float)):
-        try:
-            return int(a)
-        except ValueError:
-            return a
-    elif needFloat(name) and isinstance(a, basestring):
-        try:
-            return float(a)
-        except ValueError:
-            return a
+    elif needInt(name):
+        return int(a)
+    elif needFloat(name): # and isinstance(a, basestring):
+        return float(a)
     else:
         return a
 
