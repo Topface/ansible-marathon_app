@@ -10,6 +10,7 @@
     status_code=200
     return_content=yes
   register: marathon_ping
-  until: "{{ ('msg' not in marathon_ping or 'error' not in marathon_ping.msg) and 'content' in marathon_ping and 'pong' in marathon_ping.content }}"
+  until: ('msg' not in marathon_ping or 'error' not in marathon_ping.msg) and 'content' in marathon_ping and 'pong' in marathon_ping.content
   delay: 1
   retries: 3600
+  delegate_to: "{{ groups['control'][0] }}"
