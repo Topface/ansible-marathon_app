@@ -33,7 +33,7 @@ on marathon with single instance and waits for deployment to finish.
         container:
           type: DOCKER
           docker:
-            image: mesosphere/chronos:chronos-2.3.2-0.1.20150207000917.ubuntu1404-mesos-0.21.1-1.1.ubuntu1404
+            image: mesosphere/chronos:chronos-2.5.0-0.1.20170628182950.ubuntu1404-mesos-1.3.0
         instances: 1
         cpus: 0.5
         mem: 512
