@@ -377,6 +377,7 @@ meta:
 """
 
 import base64
+import traceback
 
 MARATHON_APP_PARAMETERS = ['cmd', 'args', 'cpus', 'mem', 'disk', 'ports', 'requirePorts', 'portDefinitions', 'ipAddress', 'instances', 'executor', 'user', 'container', 'residency', 'env', 'constraints', 'acceptedResourceRoles', 'labels', 'uris', 'storeUrls', 'dependencies', 'fetch', 'healthChecks', 'readinessChecks', 'backoffSeconds', 'backoffFactor', 'maxLaunchDelaySeconds', 'upgradeStrategy', 'version', 'versionInfo']
 
@@ -395,11 +396,11 @@ def request(url, user=None, passwd=None, data=None, method=None):
 
     if info['status'] not in (200, 201, 204):
         msg = info['msg']
-        body = info['body']
-        if body:
-            body = json.loads(body)
-        else:
+        if data:
+            msg = msg + ' ' + data
             body = {}
+        if 'body' in info:
+            body = json.loads(info['body'])
 
         module.fail_json(msg=msg, response=body, data=data)
 
@@ -746,7 +747,7 @@ def main():
         ret = method(restbase, user, passwd, module.params)
 
     except Exception, e:
-        return module.fail_json(msg=e.message)
+        return module.fail_json(msg=str(e) + ' ' + traceback.format_exc())
 
 
     module.exit_json(changed=ret['changed'], uri=uri, state=state, meta=ret['meta'])
