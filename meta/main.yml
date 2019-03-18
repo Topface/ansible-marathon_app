@@ -1,10 +1,17 @@
 ---
 galaxy_info:
-  author: Ian Babrou
+  author: Ian Babrou, Ludovic Claude
   description: Rule marathon tasks
   license: MIT
   min_ansible_version: 1.7
-  categories:
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+  galaxy_tags:
     - system
     - cloud
     - clustering
