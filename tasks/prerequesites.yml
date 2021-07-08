@@ -1,0 +1,12 @@
+---
+
+# Install pre-requesites for marathon_app module
+
+- name: Install pre-requesites for marathon_app module
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - curl
+    - python-urllib3
+  delegate_to: "{{ groups['control'][0] }}"
